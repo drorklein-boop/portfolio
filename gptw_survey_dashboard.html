@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>סקר GPTW – ניתוח תגובות עובדים 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --card: #1e2235;
+    --border: #2a2f4a;
+    --text: #e8eaf6;
+    --muted: #8892b0;
+    --positive: #4ade80;
+    --negative: #f87171;
+    --neutral: #60a5fa;
+    --accent: #a78bfa;
+    --yellow: #fbbf24;
+    --c1: #6366f1; /* היברידי */
+    --c2: #f59e0b; /* שכר */
+    --c3: #10b981; /* פיתוח */
+    --c4: #ef4444; /* ביטחון תעסוקתי */
+    --c5: #8b5cf6; /* שקיפות */
+    --c6: #06b6d4; /* אירועים */
+    --c7: #f97316; /* סביבת עבודה */
+    --c8: #ec4899; /* ניהול */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+    direction: rtl;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--c1), var(--accent));
+    margin: 1rem auto 0;
+    border-radius: 2px;
+  }
+  .header h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header p {
+    color: var(--muted);
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.25rem 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+  }
+
+  /* Summary row */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.pos::before { background: var(--positive); }
+  .stat-card.neg::before { background: var(--negative); }
+  .stat-card.neu::before { background: var(--neutral); }
+  .stat-num {
+    font-size: 2.8rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .stat-card.pos .stat-num { color: var(--positive); }
+  .stat-card.neg .stat-num { color: var(--negative); }
+  .stat-card.neu .stat-num { color: var(--neutral); }
+  .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
+
+  /* Category cards */
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.25rem;
+    margin-top: 2.5rem;
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .cat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .cat-card:hover {
+    transform: translateY(-2px);
+    border-color: #3a3f5e;
+  }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .cat-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .cat-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .cat-count {
+    margin-right: auto;
+    font-size: 0.78rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.15rem 0.6rem;
+    color: var(--muted);
+  }
+
+  /* Bar showing pos/neg split */
+  .sentiment-bar {
+    height: 8px;
+    border-radius: 8px;
+    background: var(--surface);
+    overflow: hidden;
+    margin-bottom: 0.85rem;
+    display: flex;
+  }
+  .bar-pos { background: var(--positive); border-radius: 8px 0 0 8px; }
+  .bar-neg { background: var(--negative); border-radius: 0 8px 8px 0; }
+
+  .bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .lbl-pos { color: var(--positive); }
+  .lbl-neg { color: var(--negative); }
+
+  /* Quotes */
+  .quotes { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quote {
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    border-right: 3px solid;
+  }
+  .quote.pos {
+    background: rgba(74, 222, 128, 0.07);
+    border-color: var(--positive);
+    color: #a7f3c0;
+  }
+  .quote.neg {
+    background: rgba(248, 113, 113, 0.07);
+    border-color: var(--negative);
+    color: #fca5a5;
+  }
+  .quote-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+    opacity: 0.7;
+  }
+
+  /* Overall bar chart */
+  .chart-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .chart-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 0.75rem;
+  }
+  .chart-label {
+    width: 150px;
+    font-size: 0.82rem;
+    text-align: right;
+    flex-shrink: 0;
+    color: var(--text);
+  }
+  .chart-bars {
+    flex: 1;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .bar-h {
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-left: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: rgba(0,0,0,0.8);
+    min-width: 20px;
+    transition: width 0.5s;
+  }
+  .chart-total {
+    width: 30px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 700px) {
+    .categories-grid { grid-template-columns: 1fr; }
+    .summary-row { grid-template-columns: 1fr; }
+    .chart-label { width: 100px; font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ניתוח סקר GPTW 2026</h1>
+  <p>מה העובדים רוצים לשנות? – ניתוח 51 תגובות</p>
+  <span class="badge">EMC-1 · Dror Klein</span>
+</div>
+
+<!-- Summary stats -->
+<div class="summary-row">
+  <div class="stat-card pos">
+    <div class="stat-num">18</div>
+    <div class="stat-label">✅ תגובות חיוביות / קיום</div>
+  </div>
+  <div class="stat-card neg">
+    <div class="stat-num">27</div>
+    <div class="stat-label">⚠️ תגובות עם ביקורת / שינוי נדרש</div>
+  </div>
+  <div class="stat-card neu">
+    <div class="stat-num">6</div>
+    <div class="stat-label">➖ ניטרליות / לא רלוונטיות</div>
+  </div>
+</div>
+
+<!-- Horizontal bar chart -->
+<div class="section-title">📊 נפח לפי קטגוריה</div>
+<div class="chart-container">
+  <div id="chart"></div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--positive)"></div>חיובי / לשמר</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--negative)"></div>שלילי / לשנות</div>
+  </div>
+</div>
+
+<!-- Category deep dives -->
+<div class="section-title">🔍 ניתוח לפי קטגוריות</div>
+<div class="categories-grid" id="cats"></div>
+
+<footer>מבוסס על 51 תגובות עובדים · Great Place To Work Trust Index Survey 2026</footer>
+
+<script>
+const categories = [
+  {
+    id: 'hybrid',
+    color: '#6366f1',
+    title: '🏠 עבודה היברידית',
+    count: 14,
+    posCount: 10,
+    negCount: 4,
+    pos: [
+      'להמשיך בעבודה היברידית – יומיים מהבית, 3 ימים מהמשרד. זה עובד מצוין, אין סיבה לשנות.',
+      'להשאיר את הגמישות של יומיים עבודה מהבית.',
+      'להמשיך לעבוד היברידי 3 ימים בשבוע – יותר אפקטיבי.',
+      'not go back to 5 days a week.',
+    ],
+    neg: [
+      'יותר גמישות מבחינת עבודה מהבית – נדרש אישור מנהל מחלקה גורם לתחושה שלא סומכים עליך.',
+      'לא לעבור למתכונת 5 ימים מלאים – קשה לאנשים שגרים בדרום.',
+    ]
+  },
+  {
+    id: 'salary',
+    color: '#f59e0b',
+    title: '💰 שכר ותגמול',
+    count: 8,
+    posCount: 0,
+    negCount: 8,
+    pos: [],
+    neg: [
+      'לעלות את השכר ולהשוות אותו לשוק.',
+      'שכר הוגן יותר ומתאים לשוק שבחוץ.',
+      'העלאת שכר משמעותית, לא רק 3%.',
+      'העלאת סכום הסיבוס.',
+      'Заработную плату (שכר).',
+    ]
+  },
+  {
+    id: 'dev',
+    color: '#10b981',
+    title: '📈 פיתוח מקצועי',
+    count: 7,
+    posCount: 1,
+    negCount: 6,
+    pos: [
+      'יצירת תרבות עקבית של פידבק – כל עובד ידע איפה הוא עומד ומה הצעד הבא.',
+    ],
+    neg: [
+      'לתת לאנשים יותר להתמקצע – יותר קורסים.',
+      'לפי דעתי אין מספיק פיתוח עובדים.',
+      'לא מספיק מוקד על הערכה מקצועית טכנית לעומת ניהול פרויקטים.',
+    ]
+  },
+  {
+    id: 'security',
+    color: '#ef4444',
+    title: '🔒 ביטחון תעסוקתי',
+    count: 5,
+    posCount: 0,
+    negCount: 5,
+    pos: [],
+    neg: [
+      'חסר ביטחון בעבודה כי מעבירים הרבה עבודה לחוץ לארץ.',
+      'עובדים שנשארו מרגישים נחותים – כל העבודה של הפוטרים נפלה עליהם ללא שינוי.',
+      'Make employees in reserve duty feel their job is secured.',
+      'שימור עובדים טובים בדגש לצוות אריזה ומשלוחים.',
+    ]
+  },
+  {
+    id: 'transparency',
+    color: '#8b5cf6',
+    title: '👁️ שקיפות והנהלה',
+    count: 6,
+    posCount: 0,
+    negCount: 6,
+    pos: [],
+    neg: [
+      'שקיפות מההנהלה הבכירה, שיתוף אסטרטגיה אמיתית.',
+      'יותר שקיפות כלפי העובדים – פחות הפתעות.',
+      'פחות פוליטיקה ורווח אישי בשיקולי ההנהלה.',
+      'החלטות ניהוליות חכמות ובחירת עובדים.',
+    ]
+  },
+  {
+    id: 'events',
+    color: '#06b6d4',
+    title: '🎉 אירועים וגיבוש',
+    count: 5,
+    posCount: 2,
+    negCount: 3,
+    pos: [
+      'לעשות יותר אירועי חברה וגיבושים.',
+      'לארגן יותר אירועים – גורם לגיבוש והיכרות עם עובדים ממחלקות שונות.',
+    ],
+    neg: [
+      'יותר מסיבות ופעילויות חברה כולל זוגות, חופשה משפחתית.',
+      'פעילויות משפחתיות בקיץ כולל ילדים (סופרלנד / ימית 2000).',
+    ]
+  },
+  {
+    id: 'workplace',
+    color: '#f97316',
+    title: '🏢 סביבת עבודה ורווחה',
+    count: 6,
+    posCount: 1,
+    negCount: 5,
+    pos: [
+      'מקום הכי טוב לעבוד פה.',
+    ],
+    neg: [
+      'הקמת מקום התרעננות בהפסקות – שולחן פינג פונג, פלייסטיישן, כורסאות מסאז\'.',
+      'איכות האוכל בחדר אוכל.',
+      'נוכחות יותר מורגשת של צוות HR.',
+      'להחזיר חניות!',
+      'פתיחת שאטלים מרכבת קריית אריה לחברה.',
+    ]
+  },
+  {
+    id: 'mgmt',
+    color: '#ec4899',
+    title: '⚙️ תהליכים וניהול',
+    count: 5,
+    posCount: 0,
+    negCount: 5,
+    pos: [],
+    neg: [
+      'לאחד את כל כלי העבודה בארגון – במקום Jira, Monday, Asana לבחור אחת.',
+      'לצמצם כמות ישיבות עדכון ולפנות יותר זמן לעבוד.',
+      'פחות בירוקרטיה – מאוד קשה להניע תהליכים.',
+      'לקבוע Priority ארגוני שיצמצם כמות הפרויקטים.',
+      'Work Life Balance – הורדת עומס.',
+    ]
+  },
+];
+
+// Render chart
+const chartEl = document.getElementById('chart');
+const maxTotal = Math.max(...categories.map(c => c.count));
+categories.forEach(c => {
+  const posW = Math.round((c.posCount / maxTotal) * 280);
+  const negW = Math.round((c.negCount / maxTotal) * 280);
+  chartEl.innerHTML += `
+    <div class="chart-row">
+      <div class="chart-label">${c.title}</div>
+      <div class="chart-bars">
+        ${c.posCount > 0 ? `<div class="bar-h bar-pos" style="width:${posW}px">${c.posCount}</div>` : ''}
+        ${c.negCount > 0 ? `<div class="bar-h bar-neg" style="width:${negW}px">${c.negCount}</div>` : ''}
+      </div>
+      <div class="chart-total">${c.count}</div>
+    </div>`;
+});
+
+// Render category cards
+const catsEl = document.getElementById('cats');
+categories.forEach(c => {
+  const posP = c.count > 0 ? Math.round((c.posCount / c.count) * 100) : 0;
+  const negP = 100 - posP;
+
+  let quotesHTML = '';
+  c.pos.forEach(q => {
+    quotesHTML += `<div class="quote pos"><div class="quote-tag">✅ חיובי</div>${q}</div>`;
+  });
+  c.neg.forEach(q => {
+    quotesHTML += `<div class="quote neg"><div class="quote-tag">⚠️ ביקורת</div>${q}</div>`;
+  });
+
+  catsEl.innerHTML += `
+    <div class="cat-card">
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${c.color}"></div>
+        <div class="cat-title">${c.title}</div>
+        <div class="cat-count">${c.count} תגובות</div>
+      </div>
+      <div class="sentiment-bar">
+        <div class="bar-pos" style="width:${posP}%"></div>
+        <div class="bar-neg" style="width:${negP}%"></div>
+      </div>
+      <div class="bar-labels">
+        <span class="lbl-pos">✅ ${c.posCount} חיובי</span>
+        <span class="lbl-neg">⚠️ ${c.negCount} ביקורת</span>
+      </div>
+      <div class="quotes">${quotesHTML}</div>
+    </div>`;
+});
+</script>
+</body>
+</html>
